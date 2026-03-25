@@ -1,28 +1,17 @@
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse, JSONResponse
 
 app = FastAPI()
 
-@app.get("/")
-def hello_world(
-    q: str,
-    sort: bool = False
-    ) -> dict[str, str | bool]:
-    return {"q": q, "sort": sort}
-
-@app.get("/home")
-def homepage():
-    return "This is the homepage"
-
-@app.get("/{username}")
-def username_webpage(
-    username: str
-):
-    return f"This is the webpage of user {username}"
-
-@app.get("/{username}/orders/{orders_id}")
-def repository_webpage(
-    username: str,
-    orders_id: int,
-    sort: bool = False
-):
-    return f"Order {orders_id} for user {username}. Sorted: {sort}"
+@app.get("/", response_class=HTMLResponse)
+def home():
+    html = """
+    <!DOCTYPE html>
+    <html>
+        <body>
+            <h1>Halo</h1>
+            <p>idk</p>
+        </body>
+    </html>
+    """
+    return html
