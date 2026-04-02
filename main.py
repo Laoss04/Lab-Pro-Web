@@ -1,16 +1,27 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from typing import Annotated
+from pydantic import Field, BaseModel
+
+class Product(BaseModel):
+    name: Annotated[str, Field(min_length=3, max_length=30)]
+    price: Annotated[float, Field(gt=0)]
+    location: Annotated[str, Field(min_length=3)]
+
+product = Product.model_validate(
+    {name}
+)
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 product_list = [
-    {"ID": 1, "Name": "Product 1", "Price": 10.99},
-    {"ID": 2, "Name": "Product 2", "Price": 19.99},
-    {"ID": 3, "Name": "Product 3", "Price": 29.99}
+    {"id": 1, "name": "Product 1", "price": 10.99},
+    {"id": 2, "name": "Product 2", "price": 19.99},
+    {"id": 3, "name": "Product 3", "price": 29.99}
 ]
 
 @app.get("/", response_class=HTMLResponse)
@@ -29,18 +40,27 @@ def products(request: Request):
         context={"product_list": product_list}
     )
 
-"""
-def home(request: Request):
-
-    text = {
-        "title": "Home page",
-        "content": "boh",
-    }
-    dictionary = {"key1": "value1", "key2": "value2"}
-    context = {"text": text, "dictionary": dictionary}
+@app.get("/product_form", response_class=HTMLResponse)
+def add_product(request: Request,):
     return templates.TemplateResponse(
-        request = request,
-        name="home.html",
-        context=context
+        request=request,
+        name="product_form.html"
     )
-"""
+
+@app.post("/insert_product")
+def insert_product(
+    name: Annotated[str, Form(), Field(min_length=3, max_length=30)],
+    price: Annotated[float, Form(), Field(gt=0)],
+    location: Annotated[str, Form(), Field(min_length=3)]
+):
+    new_id = len(product_list) + 1
+
+    product = {"id": new_id, "name": name, "price": price, "location": location}
+    product_list.append(product)
+    return "Product added successfully"
+
+@app.post("/insert_product_json")
+def insert_product_json(
+    product: Product
+):
+    print(product)
